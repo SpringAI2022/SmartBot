@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_LastSelectedProfileId>D:\AIO\Tool\AutoCmt\AutoCmt\Properties\PublishProfiles\ClickOnceProfile.pubxml</_LastSelectedProfileId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="fCaiDatTuongTac_NewFeeds.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="fMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="fThemNoiDung.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>
