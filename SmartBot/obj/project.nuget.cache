@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "IemjKMknQyXEA5wZXYrFR/+OODjpjdrtCSGuWKpVPtM3cPOsjc4iArHiHyVqe0HWZyfMZpkdc47z8ZepVYHlEA==",
+  "dgSpecHash": "I0ns68Q54XjjD/h6JUoTvGgVWbkFbgZukwzzC+0gyxpOa87ARhlAYL5uVl3t1JF5KPt7fV+u5cGN9dhGwJG33A==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Spring_AI\\Documents\\New folder\\SmartBot\\SmartBot\\SmartBot.csproj",
+  "projectFilePath": "C:\\Users\\Spring_AI\\source\\repos\\SpringAI2022\\SmartBot\\SmartBot\\SmartBot.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Spring_AI\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
     "C:\\Users\\Spring_AI\\.nuget\\packages\\microsoft.netcore.targets\\1.1.0\\microsoft.netcore.targets.1.1.0.nupkg.sha512",

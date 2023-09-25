@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic.Logging;
+﻿using ChromeAuto;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -27,14 +27,20 @@ namespace SmartBot
         private string WindownTitle { get; set; }
         //List<string> ListActivateSession = new List<string>();
         public string ActivateSession = "";
+        public SessionChrome gSessionChrome { get; set; }
+        //private ChromeAuto.Chrome Chrome { get; set; }
         //private int heightScreen System.Windows.SystemParameters.PrimaryScreenWidth;
         //public FbAction() {
 
         //}
-        public FbAction(string profileName, string UA, string Proxy, int timeLoad = 5, List<string> ListActivateSession = null)
+        public FbAction()
+        {
+            chrome = new Chrome("http://localhost:9222");
+        }
+        public FbAction(string profileName, string UA, string Proxy, int timeLoad = 5, List<SessionChrome> sessionChromes = null)
         {
             /* Hàm khởi tạo */
-            if (ListActivateSession == null) ListActivateSession = new List<string>();
+            if (sessionChromes == null) sessionChromes = new List<SessionChrome>();
             pathUD = Environment.CurrentDirectory + "/UserData";
             this.profileName = profileName;
             this.timeLoad = timeLoad * 1000;
@@ -60,31 +66,40 @@ namespace SmartBot
             chrome = new Chrome("http://localhost:9222");
             var sessions = chrome.GetAvailableSessions();
             string sessionWSEndpoint = "";
+            SessionChrome sessionChrome = new SessionChrome();
+
             foreach (var ss in sessions)
             {
-                if ((!ListActivateSession.Contains(ss.webSocketDebuggerUrl)) && (ss.type == "page"))
+                sessionChrome.Profile = profileName;
+                sessionChrome.session = ss.webSocketDebuggerUrl;
+                if ((!sessionChromes.Contains(sessionChrome)) && (ss.type == "page"))
                 {
                     if (ss.url.Contains("://welcome"))
                     {
-                        sessionWSEndpoint = ss.webSocketDebuggerUrl;
-                        ListActivateSession.Add(sessionWSEndpoint);
+                        sessionWSEndpoint = sessionChrome.session;
+                        sessionChromes.Add(sessionChrome);
                         break;
                     }
                     else if (ss.url == "chrome://newtab/")
                     {
-                        sessionWSEndpoint = ss.webSocketDebuggerUrl;
-                        ListActivateSession.Add(sessionWSEndpoint);
+                        sessionWSEndpoint = sessionChrome.session;
+                        sessionChromes.Add(sessionChrome);
                         break;
                     }
                     else if (ss.url.Contains("http"))
                     {
-                        sessionWSEndpoint = ss.webSocketDebuggerUrl;
-                        ListActivateSession.Add(sessionWSEndpoint);
+                        sessionWSEndpoint = sessionChrome.session;
+                        sessionChromes.Add(sessionChrome);
                         break;
                     }
                 }
             }
             ActivateSession = sessionWSEndpoint;
+            gSessionChrome = sessionChrome;
+            chrome.SetActiveSession(sessionWSEndpoint);
+        }
+        public void SetAcivateSession(string sessionWSEndpoint)
+        {
             chrome.SetActiveSession(sessionWSEndpoint);
         }
         public async Task LoginFB(string username, string password)
@@ -237,6 +252,139 @@ namespace SmartBot
             //Delay(4);
             await Task.Delay(timeLoad);
         }
+
+        public async Task PostWall_KichBan(HanhDong BaiDang)
+        {
+            /* Đăng bài lên tường nhà theo kich ban*/
+            chrome.NavigateTo("https://facebook.com");
+
+            await Task.Delay(timeLoad);
+            chrome.Eval("document.getElementsByClassName('xe4j0kc x78zum5 x1a02dak x1vqgdyp x1l1ennw x14vqqas x6ikm8r x10wlt62 x1y1aw1k xh8yej3')[0]" +
+                ".getElementsByTagName('div')[3].click()");
+            await Task.Delay(2000);
+            chrome.SendText(BaiDang.content);
+            if (BaiDang.attach != null)
+            {
+                string pathAnh = BaiDang.attach.Trim();
+                if (pathAnh.Length > 0)
+                {
+                    await Task.Delay(1000);
+                    var xy_cor = chrome.GetCenterEle("document.getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x78zum5 xdt5ytf x2lah0s x193iq5w " +
+                        "xurb0ha x1sxyh0 x1gslohp x12nagc xzboxd6 x14l7nz5')[0].getBoundingClientRect().toJSON()");
+                    await Task.Delay(1000);
+                    StringBuilder pathIMG = new StringBuilder(pathAnh);
+                    //string[] arrAnh = BaiDang.Image
+                    //foreach (var ele in )
+                    //{
+                    //    pathIMG.Append("\"");
+                    //    pathIMG.Append(ele.ToString());
+                    //    pathIMG.Append("\"");
+                    //}
+                    chrome.MouseClick(xy_cor[0], xy_cor[1]);
+                    await Task.Delay(3000);
+                    await Task.Run(() => SendIMG(pathIMG));
+                    await Task.Delay(3000);
+                }
+            }
+            await Task.Delay(2000);
+            var btn_Submit = chrome.GetCenterEle("document.getElementsByClassName('x6s0dn4 x9f619 x78zum5 x1qughib x1pi30zi x1swvt13 xyamay9 xh8yej3')[0]" +
+            ".getElementsByTagName('div')[0].getBoundingClientRect().toJSON()");
+            await Task.Delay(500);
+            chrome.MouseClick(btn_Submit[0], btn_Submit[1]);
+
+            await Task.Delay(timeLoad);
+        }
+        public async Task PostGroup_KichBan(HanhDong BaiDang)
+        {
+            /*
+             * Đăng bài vào group theo kịch bản
+             */
+            chrome.NavigateTo(BaiDang.link);
+            await Task.Delay(timeLoad);
+            //for (int i = 0; i < 9; i++)
+            //{
+            //    SendKeys.SendWait("{TAB}");
+            //    await Task.Delay(100);
+            //}
+            chrome.Eval("document.getElementsByClassName('x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a')[0]" +
+                ".getElementsByTagName('div')[3].click()");
+            await Task.Delay(2000);
+            chrome.SendText(BaiDang.content);
+            if (BaiDang.attach != null)
+            {
+                string pathAnh = BaiDang.attach.Trim();
+                if (pathAnh.Length > 0)
+                {
+                    await Task.Delay(1000);
+                    var xy_cor = chrome.GetCenterEle("document.getElementsByClassName('xr9ek0c xfs2ol5 xjpr12u x12mruv9')[0].getBoundingClientRect().toJSON()");
+                    await Task.Delay(1000);
+                    chrome.MouseClick(xy_cor[0], xy_cor[1]);
+                    await Task.Delay(1300);
+                    StringBuilder pathIMG = new StringBuilder(pathAnh);
+                    await Task.Run(() => SendIMG(pathIMG));
+                    await Task.Delay(2000);
+                }
+            }
+            await Task.Delay(2000);
+
+            var ele_int = chrome.Eval("document.getElementsByClassName('x78zum5 x1q0g3np xqui1pq x1pl0jk3 x1plvlek xryxfnj x14ocpvf x5oemz9 x1lck2f0 xlgs127')[0]" +
+                ".getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x78zum5 xdt5ytf x193iq5w xeuugli x1r8uery x1iyjqo2 xs83m0k xsyo7zv x16hj40l x10b6aqq x1yrsyyn')" +
+                ".length-1");
+            var ele_json = JsonConvert.DeserializeObject<dynamic>(ele_int)["result"]["result"]["value"];
+
+            chrome.Eval("document.getElementsByClassName('x78zum5 x1q0g3np xqui1pq x1pl0jk3 x1plvlek xryxfnj x14ocpvf x5oemz9 x1lck2f0 xlgs127')[0]" +
+                $".getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x78zum5 xdt5ytf x193iq5w xeuugli x1r8uery x1iyjqo2 xs83m0k xsyo7zv x16hj40l x10b6aqq x1yrsyyn')[{ele_json.ToString()}]" +
+                ".getElementsByTagName('div')[0].click()");
+            //Delay(4);
+            await Task.Delay(timeLoad);
+        }
+        public async Task CommentToID_KichBan(HanhDong binhluan)
+        {
+            /*
+             * Đăng bình luận vào bài viết vào ID theo kịch bản
+             */
+            chrome.NavigateTo(binhluan.link);
+            await Task.Delay(timeLoad);
+            var svgcmtBox = chrome.GetCenterEle("document.getElementsByClassName('x1iorvi4 x1pi30zi xjkvuk6 x1swvt13')[0]" +
+                ".getBoundingClientRect().toJSON()");
+            chrome.Eval($"scrollBy(0, {svgcmtBox[1] - svgcmtBox[3] * 3})");
+            await Task.Delay(1000);
+            svgcmtBox = chrome.GetCenterEle("document.getElementsByClassName('x1iorvi4 x1pi30zi xjkvuk6 x1swvt13')[0]" +
+                ".getBoundingClientRect().toJSON()");
+            await Task.Delay(500);
+            chrome.MouseClick(svgcmtBox[0], svgcmtBox[1]);
+            await Task.Delay(1000);
+            chrome.SendText(binhluan.content);
+            await Task.Delay(1000);
+            if (binhluan.attach != null)
+            {
+                string pathAnh = binhluan.attach.Trim();
+                if (pathAnh.Length > 0)
+                {
+                    StringBuilder pathIMG = new StringBuilder(pathAnh);
+                    svgcmtBox = chrome.GetCenterEle("document.getElementsByClassName('x1iorvi4 x1pi30zi xjkvuk6 x1swvt13')[0]" +
+                        ".getElementsByTagName('ul')[1].getElementsByTagName('li')[2].getBoundingClientRect().toJSON()");
+                    await Task.Delay(500);
+                    if (svgcmtBox == null)
+                    {
+                        svgcmtBox = chrome.GetCenterEle("document.getElementsByClassName('x1iorvi4 x1pi30zi xjkvuk6 x1swvt13')[0]" +
+                                                ".getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getBoundingClientRect().toJSON()");
+                        await Task.Delay(500);
+                    }
+                    chrome.MouseClick(svgcmtBox[0], svgcmtBox[1]);
+                    await Task.Delay(1900);
+                    await Task.Run(() => SendIMG(pathIMG));
+                    await Task.Delay(2000);
+                }
+            }
+            svgcmtBox = chrome.GetCenterEle("document.getElementsByClassName('x1iorvi4 x1pi30zi xjkvuk6 x1swvt13')[0]" +
+                ".getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x78zum5 x2lah0s x1qughib x6s0dn4 xozqiw3 x1q0g3np xcud41i x139jcc6 x4cne27 xifccgj')[0]" +
+                ".getBoundingClientRect().toJSON()");
+            await Task.Delay(500);
+            chrome.MouseClick(svgcmtBox[0], svgcmtBox[1]);
+            await Task.Delay(timeLoad);
+        }
+
         public async Task CommentAsync(PhanHoi BinhLuan)
         {
             chrome.NavigateTo(BinhLuan.Link);
@@ -729,7 +877,7 @@ namespace SmartBot
                                 $".getElementsByTagName('a').length");
                             if (lenJoin != null)
                             {
-                                if(j % 3 == 0)
+                                if (j % 3 == 0)
                                 {
                                     chrome.Eval($"document.getElementsByClassName('x1yztbdb')[{j}].getElementsByClassName('x6s0dn4 x78zum5 x1q0g3np')[2]" +
                                         ".scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });");
@@ -830,7 +978,7 @@ namespace SmartBot
                                 }
                                 await Task.Delay(1000);
                                 string newURL = chrome.url();
-                                if(oldURL != newURL)
+                                if (oldURL != newURL)
                                 {
                                     chrome.NavigateTo(oldURL);
                                     await Task.Delay(timeLoad);
@@ -885,7 +1033,7 @@ namespace SmartBot
                                     };
                                     link_List = new List<dynamic> { myLink };
                                 }
-                                
+
                             }
                             else
                             {
@@ -1037,7 +1185,7 @@ namespace SmartBot
                                     string motaPage = JsonConvert.DeserializeObject<dynamic>(motaPage_obj)["result"]["result"]["value"];
                                     await Task.Delay(500);
                                     int rdDelayClick = randomz.Next(1500, 5600);
-                                    
+
                                     if (lenJoin == "0" && JoinFl > 0 && rdDelayClick % 2 == 0 && boolHanChe == true)
                                     {
                                         var searchBoxz = chrome.GetCenterEle($"document.getElementsByClassName('x1yztbdb')[{j}].getElementsByClassName('x6s0dn4 x78zum5 x1q0g3np')[2].getBoundingClientRect().toJSON()");
@@ -1047,7 +1195,7 @@ namespace SmartBot
                                         var PheDuyet = chrome.GetCenterEle("document.getElementsByClassName('x1cy8zhl x9f619 x78zum5 xl56j7k x2lwn1j " +
                                             "xeuugli x47corl xurb0ha x1sxyh0 x1x97wu9 xbr3nou x3v4vwv x1dzdb2q')[0]" +
                                             ".getElementsByClassName('x92rtbv x10l6tqk x1tk7jg1 x1vjfegm')[0].getBoundingClientRect().toJSON()");
-                                        if (PheDuyet != null)   
+                                        if (PheDuyet != null)
                                         {
                                             await Task.Delay(1000);
                                             chrome.MouseClick(PheDuyet[0], PheDuyet[1]);
@@ -1057,7 +1205,7 @@ namespace SmartBot
                                             ".getElementsByClassName('x92rtbv x10l6tqk x1tk7jg1 x1vjfegm')[0].getBoundingClientRect().toJSON()");
                                             //await Task.Delay(3000);
                                             chrome.MouseClick(PheDuyet[0], PheDuyet[1]);
-                                            
+
                                             await Task.Delay(1000);
                                             action_ = false;
                                             //continue;
@@ -1069,7 +1217,7 @@ namespace SmartBot
                                         }
                                         await Task.Delay(1000);
                                         float[] hanChe = chrome.GetCenterEle("document.getElementsByClassName(\"x78zum5 xdt5ytf x1qughib x17v04x3 x14rvwrp\")[0].getElementsByClassName('x16n37ib')[0].getBoundingClientRect().toJSON()");
-                                        if(hanChe != null)
+                                        if (hanChe != null)
                                         {
                                             await Task.Delay(500);
                                             chrome.MouseClick(hanChe[0], hanChe[1]);
@@ -1208,7 +1356,7 @@ namespace SmartBot
             string strLenSearch = chrome.getValueEle("document.getElementsByClassName('x78zum5 x1a02dak x139jcc6 xcud41i x9otpla x1ke80iy')[0]" +
                 ".getElementsByClassName('xh8yej3').length");
             int lenLike = Convert.ToInt32(strLenSearch);
-            for(int i = 0; i < lenLike; i++)
+            for (int i = 0; i < lenLike; i++)
             {
                 string textValue = chrome.getValueEle("document.getElementsByClassName('x78zum5 x1a02dak x139jcc6 xcud41i x9otpla x1ke80iy')[0]" +
                     $".getElementsByClassName('xh8yej3')[{i}].textContent");
@@ -1234,7 +1382,7 @@ namespace SmartBot
             await Task.Delay(timeLoad);
             string stringLenSearch = chrome.getValueEle("document.getElementById('search').getElementsByClassName('MjjYud').length");
             int lenSearch = Convert.ToInt16(stringLenSearch);
-            for(int i = 0; i < lenSearch; i++)
+            for (int i = 0; i < lenSearch; i++)
             {
                 chrome.Eval("document.getElementById('search')" +
                     $".getElementsByClassName('MjjYud')[{i}]" +
@@ -1242,7 +1390,7 @@ namespace SmartBot
                 Random random = new Random();
                 int rd = random.Next(1000, 3400);
                 await Task.Delay(rd);
-                if(rd % 2 == 0)
+                if (rd % 2 == 0)
                 {
                     chrome.Eval("document.getElementById('search').getElementsByClassName('MjjYud')[0].getElementsByTagName('a')[0].click();");
                 }

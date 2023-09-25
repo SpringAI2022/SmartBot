@@ -38,8 +38,8 @@ namespace SmartBot
 
     public class KichBan
     {
-        public int id { get; set;}
-        public List<int> id_hanhdong { get; set; }
+        public string id { get; set; }
+        public List<string> id_hanhdong { get; set; }
         public string mota { get; set; }
         public bool status { get; set; }
         public string created_at { get; set; } // Năm-Tháng-Ngày Giờ:Phút
@@ -47,7 +47,7 @@ namespace SmartBot
 
     public class HanhDong
     {
-        public int id { get; set; }
+        public string id { get; set; }
         public int type { get; set; }
         public string content { get; set; }
         public string link { get; set; }
@@ -57,5 +57,9 @@ namespace SmartBot
         public string post_time { get; set; } // Năm-Tháng-Ngày Giờ:Phút
         public string created_at { get; set; } // Năm-Tháng-Ngày Giờ:Phút
     }
-
+    public class SessionChrome
+    {
+        public string Profile { get; set; }
+        public string session { get; set; }
+    }
 }

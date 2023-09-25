@@ -114,6 +114,7 @@ namespace SmartBot
             txt_Pass = new System.Windows.Forms.TextBox();
             label16 = new System.Windows.Forms.Label();
             tabControl1 = new System.Windows.Forms.TabControl();
+            btnKichBan = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             tab_Tools.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numSoLuong).BeginInit();
@@ -441,6 +442,7 @@ namespace SmartBot
             // tab_Actions
             // 
             tab_Actions.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            tab_Actions.Controls.Add(btnKichBan);
             tab_Actions.Controls.Add(label1);
             tab_Actions.Controls.Add(txt_JoinNGr);
             tab_Actions.Controls.Add(txt_KeySearchGroup);
@@ -899,6 +901,16 @@ namespace SmartBot
             tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             tabControl1.TabIndex = 28;
             // 
+            // btnKichBan
+            // 
+            btnKichBan.Location = new System.Drawing.Point(590, 416);
+            btnKichBan.Name = "btnKichBan";
+            btnKichBan.Size = new System.Drawing.Size(122, 28);
+            btnKichBan.TabIndex = 60;
+            btnKichBan.Text = "Chạy Kịch Bản";
+            btnKichBan.UseVisualStyleBackColor = true;
+            btnKichBan.Click += btnKichBan_Click;
+            // 
             // fMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -1010,6 +1022,7 @@ namespace SmartBot
         private System.Windows.Forms.DataGridViewTextBoxColumn cProxy;
         private System.Windows.Forms.DataGridViewTextBoxColumn cStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn gridView_Delay;
+        private System.Windows.Forms.Button btnKichBan;
     }
 }
 

@@ -3700,11 +3700,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Spring_AI\\Documents\\New folder\\SmartBot\\SmartBot\\SmartBot.csproj",
+      "projectUniqueName": "C:\\Users\\Spring_AI\\source\\repos\\SpringAI2022\\SmartBot\\SmartBot\\SmartBot.csproj",
       "projectName": "SmartBot",
-      "projectPath": "C:\\Users\\Spring_AI\\Documents\\New folder\\SmartBot\\SmartBot\\SmartBot.csproj",
+      "projectPath": "C:\\Users\\Spring_AI\\source\\repos\\SpringAI2022\\SmartBot\\SmartBot\\SmartBot.csproj",
       "packagesPath": "C:\\Users\\Spring_AI\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Spring_AI\\Documents\\New folder\\SmartBot\\SmartBot\\obj\\",
+      "outputPath": "C:\\Users\\Spring_AI\\source\\repos\\SpringAI2022\\SmartBot\\SmartBot\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Spring_AI\\AppData\\Roaming\\NuGet\\NuGet.Config",

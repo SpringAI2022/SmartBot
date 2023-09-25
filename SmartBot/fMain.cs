@@ -21,12 +21,14 @@ using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using File = System.IO.File;
-using Chrome = ChromeAuto.Chrome;
+using System.Net.NetworkInformation;
+using ChromeAuto;
 
 namespace SmartBot
 {
     public partial class fMain : Form
     {
+
         private int timeLoad { get; set; }
         private FbAction FB { get; set; }
         private fCaiDatTuongTac_NewFeeds formNewfeeds { get; set; }
@@ -44,6 +46,7 @@ namespace SmartBot
         private CancellationTokenSource cts;
         private List<dynamic> acc_List;
         List<string> ListActivateSession = new List<string>();
+        List<SessionChrome> sessionChromes = new List<SessionChrome>();
         string[] arr_Anh = null;
         public fMain()
         {
@@ -690,8 +693,9 @@ namespace SmartBot
         }
         private async Task<bool> MultiSearch(string Profile, string keySearch, string location, int ngroup, int pro5)
         {
-            FbAction fb = new FbAction(Profile, txt_UA.Text, txt_Proxy.Text, 5, ListActivateSession);
+            FbAction fb = new FbAction(Profile, txt_UA.Text, txt_Proxy.Text, 5, sessionChromes);
             ListActivateSession.Add(fb.ActivateSession);
+            sessionChromes.Add(fb.gSessionChrome);
             //FB = new FbAction(Profile, txt_UA.Text, txt_Proxy.Text);
             dataGridView.Invoke((MethodInvoker)delegate
             {
@@ -815,61 +819,221 @@ namespace SmartBot
             await pts.WaitWhilePausedAsync();
         }
         #region Kịch bản
+        private async Task RunKichBan(CancellationToken ct)
+        {
+            var donviHanhChinh = await File.ReadAllTextAsync("Data/DonViHanhChinh.json");
+            dynamic donvi = JsonConvert.DeserializeObject<dynamic>(donviHanhChinh);
+            List<Task> TaskList = new List<Task>();
+            listFolder = Directory.GetDirectories(pathUD, "Profile *");
+            int lenProfile = listFolder.Length;
+            this.BeginInvoke(new Action(async () =>
+            {
+
+                bool flag = true;
+                if (lenProfile == 0)
+                {
+                    MessageBox.Show("Chưa đăng nhập. Hãy đăng nhập trước khi chạy!", "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    flag = false;
+                }
+                if (flag)
+                {
+                    await LoadKichBan();
+                }
+            }));
+            await Task.Delay(20000);
+            await pts.WaitWhilePausedAsync();
+        }
         public async Task LoadKichBan()
         {
-
+            /*
+             * Hàm này thực hiện load các kịch bản trong database
+             * Sau đó đưa kịch bản vào chạy tại hàm ChayKichBan
+             */
+            try
+            {
+                string pathKichBan = "Database/Data_KichBan.json";
+                var strKichBan = await File.ReadAllTextAsync(pathKichBan);
+                List<KichBan> listKichBan = JsonConvert.DeserializeObject<List<KichBan>>(strKichBan);
+                foreach (KichBan kb in listKichBan)
+                {
+                    if (kb != null)
+                    {
+                        if (kb.status)
+                        {
+                            await ChayKichBan(kb);
+                            kb.status = false;
+                        }
+                    }
+                }
+                using (StreamWriter file = File.CreateText("Database/Data_KichBan.json"))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(file, listKichBan);
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Không tìm thấy file chứa kịch bản. Hãy kiểm tra lại!", "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         private async Task ChayKichBan(KichBan kichban)
         {
-            
-            List<HanhDong> listHanhDongOfKichBan = new List<HanhDong>();
+            /*
+             * Hàm này thực hiện chạy 1 kịch bản.
+             * Load các hành động trong kịch bản.
+             * Chạy lần lượt các hành động tại hàm ChayHanhDong
+             */
+            //List<HanhDong> listHanhDongOfKichBan = new List<HanhDong>();
             try
             {
                 string pathHanhDong = "Database/Data_HanhDong.json";
                 //list_acc = File.ReadAllLines(filePath);
                 var strHanhDong = await File.ReadAllTextAsync(pathHanhDong);
                 List<HanhDong> listHanhDong = JsonConvert.DeserializeObject<List<HanhDong>>(strHanhDong);
-                foreach(int id_hanhdong in kichban.id_hanhdong)
+                foreach (string id_hanhdong in kichban.id_hanhdong)
                 {
+                    /*
+                     * Load các hành động có trong kịch bản vào 1 danh sách
+                     */
                     HanhDong hanhdong = listHanhDong.Find(
-                        (HanhDong ob) =>  ob.id == id_hanhdong);
+                        (HanhDong ob) => ob.id == id_hanhdong);
                     if (hanhdong != null)
                     {
-                        listHanhDongOfKichBan.Add(hanhdong);
-                    }
-                }
-                if(listHanhDongOfKichBan.Count > 0)
-                {
-                    foreach(HanhDong hanhDong in listHanhDongOfKichBan)
-                    {
-                        if (hanhDong.status)
+                        //listHanhDongOfKichBan.Add(hanhdong);
+                        if (hanhdong.status)
                         {
-                            await ChayHanhDong(hanhDong);
+                            await ChayHanhDong(hanhdong);
+                            hanhdong.status = false;
                         }
                     }
                 }
+                using (StreamWriter file = File.CreateText("Database/Data_HanhDong.json"))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(file, listHanhDong);
+                }
+                //if (listHanhDongOfKichBan.Count > 0)
+                //{
+                //    foreach (HanhDong hanhDong in listHanhDongOfKichBan)
+                //    {
+                //        if (hanhDong.status)
+                //        {
+                //            /*
+                //             * Chạy hành động trong danh sách đã được load trên kia
+                //             * Nếu hành động chưa được chạy (true), thực hiện chạy
+                //             */
+                //            await ChayHanhDong(hanhDong);
+                //            hanhDong.status = false;
+
+                //            //MessageBox.Show(hanhDong.ToString());
+                //        }
+                //    }
+                //}
             }
             catch
             {
-                MessageBox.Show("Hãy tải dữ liệu trước khi chạy!", "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Không tìm thấy file chứa hành động. Hãy kiểm tra lại!", "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private async Task ChayHanhDong(HanhDong hanhdong)
         {
-            while (true)
+            DateTime nowTime = DateTime.Now;
+            DateTime postTime = Convert.ToDateTime(hanhdong.post_time);
+            double diffTime = (postTime - nowTime).TotalMilliseconds;
+            string folder_Profile = $"Profile {hanhdong.user_profile}";
+            SessionChrome ss = sessionChromes.Find(
+                    ob => ob.Profile == folder_Profile);
+            FbAction fb;
+            int idxStatus = 0;
+            if (diffTime > 0)
             {
-                string nowTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-                if(nowTime.Equals(hanhdong.post_time))
+                await Task.Delay(Convert.ToInt32(diffTime));
+            }
+            if (ss == null)
+            {
+                idxStatus = dataGridView.Rows.Count;
+                dataGridView.Invoke((MethodInvoker)delegate
                 {
-                    /*
-                     * Đúng giờ thì sẽ thực hiện hành động
-                     * Nên update là sẽ hành động trong 1 khoảng thời gian nào đó, thay vì 1 thời gian cố định
-                     */
-                }
-                else
+                    dataGridView.Rows.Add();
+                    dataGridView.Rows[idxStatus].Cells[1].Value = idxStatus + 1;
+                    dataGridView.Rows[idxStatus].Cells[2].Value = hanhdong.user_profile;
+                    dataGridView.Rows[idxStatus].Cells[3].Value = txt_UA.Text;
+                    dataGridView.Rows[idxStatus].Cells[4].Value = txt_Proxy.Text;
+                    dataGridView.Rows[idxStatus].Cells[5].Value = "Đang khởi tạo!!!";
+                });
+                fb = new FbAction(folder_Profile, txt_UA.Text, txt_Proxy.Text, 5, sessionChromes);
+                sessionChromes.Add(fb.gSessionChrome);
+            }
+            else
+            {
+                //MessageBox.Show(ss.Profile);
+                dataGridView.Invoke((MethodInvoker)delegate
                 {
-                    await Task.Delay(1000);
-                }
+                    for (int i = 0; i < dataGridView.Rows.Count; i++)
+                    {
+                        if (dataGridView.Rows[i].Cells[2].Value == hanhdong.user_profile)
+                        {
+                            idxStatus = i;
+                        }
+                    }
+                });
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows.Add();
+                    dataGridView.Rows[idxStatus].Cells[1].Value = idxStatus + 1;
+                    dataGridView.Rows[idxStatus].Cells[2].Value = hanhdong.user_profile;
+                    dataGridView.Rows[idxStatus].Cells[3].Value = txt_UA.Text;
+                    dataGridView.Rows[idxStatus].Cells[4].Value = txt_Proxy.Text;
+                    dataGridView.Rows[idxStatus].Cells[5].Value = "Đang khởi tạo!!!";
+                });
+                fb = new FbAction();
+                fb.SetAcivateSession(ss.session);
+                /*
+                 * Lấy session đang chạy để chạy tiếp hoặc mở thêm tab mới từ session đó, rồi đưa Session vào Danh sách.
+                 * Cần đưa FBAction vào 1 danh sách để quản lý, Danh sách chứa đối tượng: FBAction, tên Profile, Session Profile
+                 */
+            }
+            if (hanhdong.type == 0)
+            {
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows[idxStatus].Cells[5].Value = "Đang đăng bài lên tường";
+                });
+                await fb.PostWall_KichBan(hanhdong);
+                saveLog("Đăng lên Tường", hanhdong.user_profile, System.DateTime.Now.ToString(), hanhdong.link);
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows[idxStatus].Cells[5].Value = $"{hanhdong.user_profile} Đã đăng bài lên tường thành công!!";
+                });
+                await Task.Delay(2000);
+            }
+            else if (hanhdong.type == 1)
+            {
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows[idxStatus].Cells[5].Value = "Đang đăng bài vào groups";
+                });
+                await fb.PostGroup_KichBan(hanhdong);
+                saveLog("Đăng lên Nhóm", hanhdong.user_profile, System.DateTime.Now.ToString(), hanhdong.link);
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows[idxStatus].Cells[5].Value = $"{hanhdong.user_profile} Đã đăng bài lên Nhóm thành công!!";
+                });
+                await Task.Delay(2000);
+            }
+            else if (hanhdong.type == 2)
+            {
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows[idxStatus].Cells[5].Value = "Đang bình luận!!!";
+                });
+                await fb.CommentToID_KichBan(hanhdong);
+                saveLog("Đăng lên Nhóm", hanhdong.user_profile, System.DateTime.Now.ToString(), hanhdong.link);
+                dataGridView.Invoke((MethodInvoker)delegate
+                {
+                    dataGridView.Rows[idxStatus].Cells[5].Value = $"{hanhdong.user_profile} Đã đăng Bình luận thành công!!";
+                });
+                await Task.Delay(2000);
             }
         }
         #endregion
@@ -899,7 +1063,18 @@ namespace SmartBot
             pts = new PauseTokenSource();
             var tokenSource = cts.Token;
             await Task.Run(() => searchKey(tokenSource));
+        }
 
+        private async void btnKichBan_Click(object sender, EventArgs e)
+        {
+            dataGridView.Invoke((MethodInvoker)delegate
+            {
+                dataGridView.Rows.Clear();
+            });
+            cts = new CancellationTokenSource();
+            pts = new PauseTokenSource();
+            var tokenSource = cts.Token;
+            await Task.Run(() => RunKichBan(tokenSource));
         }
     }
 }
