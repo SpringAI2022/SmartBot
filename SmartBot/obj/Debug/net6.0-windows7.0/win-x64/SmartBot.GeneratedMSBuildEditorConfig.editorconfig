@@ -18,4 +18,4 @@ build_property.EnableSingleFileAnalyzer = true
 build_property.EnableTrimAnalyzer = 
 build_property.IncludeAllContentForSelfExtract = 
 build_property.RootNamespace = SmartBot
-build_property.ProjectDir = C:\Users\Spring_AI\Documents\New folder\SmartBot\SmartBot\
+build_property.ProjectDir = C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\

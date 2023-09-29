@@ -23,12 +23,17 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using File = System.IO.File;
 using System.Net.NetworkInformation;
 using ChromeAuto;
+using RestSharp;
+using Newtonsoft.Json.Linq;
+using RestSharp.Authenticators;
+using static System.Windows.Forms.Design.AxImporter;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace SmartBot
 {
     public partial class fMain : Form
     {
-
+        private bool _stop = true;
         private int timeLoad { get; set; }
         private FbAction FB { get; set; }
         private fCaiDatTuongTac_NewFeeds formNewfeeds { get; set; }
@@ -52,7 +57,56 @@ namespace SmartBot
         {
             InitializeComponent();
             this.timeLoad = Convert.ToInt16(num_Delay.Value) * 1000;
+            readToken();
             LoadTinh();
+
+        }
+        private async void readToken()
+        {
+            string configPath = "Config.json";
+            string strToken = "";
+            if (File.Exists(configPath))
+            {
+                strToken = File.ReadAllText(configPath);
+            }
+            var jToken = JsonConvert.DeserializeObject<dynamic>(strToken);
+
+            if (jToken == null || strToken == "")
+            {
+                Console.WriteLine("Không có token, chạy hàm login");
+                fLogin login = new fLogin();
+                login.ShowDialog();
+                _stop = login._stop;
+            }
+            else
+            {
+                //var authenticator = new JwtAuthenticator(jToken.access_token);
+                var options = new RestClientOptions("http://127.0.0.1:5000");
+                var client = new RestClient(options);
+                var request = new RestRequest("/protected");
+                //{
+                //    Authenticator = authenticator
+                //};
+                request.AddHeader("Authorization", $"Bearer {jToken.access_token}");
+                string hwID = HardwareID.Value();
+                request.AddParameter("hwID", hwID);
+                //request.AddFile("file", path);
+                //var response = client.Post(request);
+                var response = client.Post(request);
+                var content = response.Content; // Raw content as string
+                var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
+                var status = jResponse.status;
+                if (status == "success")
+                {
+                    _stop = false;
+                }
+                else
+                {
+                    _stop = true;
+                    MessageBox.Show(jResponse.message);
+                    Console.WriteLine(jResponse.message);
+                }
+            }
         }
         private void LoadTinh()
         {
@@ -1065,7 +1119,7 @@ namespace SmartBot
             await Task.Run(() => searchKey(tokenSource));
         }
 
-        private async void btnKichBan_Click(object sender, EventArgs e)
+        private async void KichBan_Click(object sender, EventArgs e)
         {
             dataGridView.Invoke((MethodInvoker)delegate
             {
@@ -1075,6 +1129,14 @@ namespace SmartBot
             pts = new PauseTokenSource();
             var tokenSource = cts.Token;
             await Task.Run(() => RunKichBan(tokenSource));
+        }
+
+        private void fMain_Load(object sender, EventArgs e)
+        {
+            if (this._stop == true)
+            {
+                this.Close();
+            }
         }
     }
 }

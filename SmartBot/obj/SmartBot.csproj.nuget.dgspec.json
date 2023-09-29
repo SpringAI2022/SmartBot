@@ -40,9 +40,17 @@
         "net6.0-windows7.0": {
           "targetAlias": "net6.0-windows7.0",
           "dependencies": {
+            "ChromeAuto": {
+              "target": "Package",
+              "version": "[2.0.0, )"
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.3, )"
+            },
+            "RestSharp": {
+              "target": "Package",
+              "version": "[110.2.0, )"
             },
             "WebSocket4Net": {
               "target": "Package",

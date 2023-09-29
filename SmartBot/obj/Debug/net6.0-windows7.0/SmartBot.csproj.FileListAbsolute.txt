@@ -28,3 +28,21 @@ C:\Users\Spring_AI\Documents\New folder\SmartBot\SmartBot\obj\Debug\net6.0-windo
 C:\Users\Spring_AI\Documents\New folder\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.pdb
 C:\Users\Spring_AI\Documents\New folder\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.genruntimeconfig.cache
 C:\Users\Spring_AI\Documents\New folder\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\ref\SmartBot.dll
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.csproj.AssemblyReference.cache
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fCaiDatTuongTac_BinhLuan.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fCaiDatTuongTac_NewFeeds.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fCaiDatTuongTac_Nhom.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fCaiDatTuongTac_Reels.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fCaiDatTuongTac_Stories.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fLogin.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fMain.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.fThemNoiDung.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.Properties.Resources.resources
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.csproj.GenerateResource.cache
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.AssemblyInfoInputs.cache
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.AssemblyInfo.cs
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.csproj.CoreCompileInputs.cache
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.dll
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\refint\SmartBot.dll
+C:\Users\Spring_AI\source\repos\SpringAI2022\SmartBot\SmartBot\obj\Debug\net6.0-windows7.0\SmartBot.pdb
