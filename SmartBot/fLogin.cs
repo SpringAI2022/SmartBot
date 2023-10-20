@@ -33,11 +33,17 @@ namespace SmartBot
             //    Authenticator = new HttpBasicAuthenticator("username", "password")
             //};
             var client = new RestClient(options);
-            var request = new RestRequest("/login");
+            var request = new RestRequest("/api/user/login_app");
+            request.AddHeader("Content-Type", "application/json");
             string hwID = HardwareID.Value();
-            request.AddParameter("username", username);
-            request.AddParameter("password", password);
-            request.AddParameter("hwID", hwID);
+            var requestBody = new
+            {
+                username = username,
+                password = password,
+                hwID = hwID
+            };
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+            request.AddParameter("application/json", jsonRequestBody, ParameterType.RequestBody);
             //request.AddFile("file", path);
             //var response = client.Post(request);
             var response = client.Post(request);
@@ -45,11 +51,12 @@ namespace SmartBot
             {
                 var content = response.Content; // Raw content as string
                 var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
-                var status = jResponse.status;
-                if (status == "success")
+                var error_code = jResponse.error_code;
+                if (error_code == 0)
                 {
                     _stop = false;
-                    string token = jResponse.token;
+                    var data = jResponse.data;
+                    string token = data.license;
                     string configPath = Environment.CurrentDirectory + "/config.json";
                     string strToken = "";
                     if (File.Exists(configPath))
