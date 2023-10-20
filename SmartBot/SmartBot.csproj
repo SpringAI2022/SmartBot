@@ -10,13 +10,8 @@
     <PackageReference Include="ChromeAuto" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
+    <PackageReference Include="System.Management" Version="7.0.2" />
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="ChromeAuto">
-      <HintPath>..\..\..\..\AIO\ChromeAuto\ChromeAuto\bin\Debug\net6.0\ChromeAuto.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

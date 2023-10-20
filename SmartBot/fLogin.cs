@@ -41,30 +41,48 @@ namespace SmartBot
             //request.AddFile("file", path);
             //var response = client.Post(request);
             var response = client.Post(request);
-            var content = response.Content; // Raw content as string
-            var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
-            var status = jResponse.status;
-            if (status == "success")
+            if (response.IsSuccessful)
             {
-                _stop = false;
-                string token = jResponse.token;
-                var jToken = new
+                var content = response.Content; // Raw content as string
+                var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
+                var status = jResponse.status;
+                if (status == "success")
                 {
-                    access_token = token
-                };
-                using (StreamWriter file = File.CreateText("Config.json"))
-                {
-                    JsonSerializer serializer = new JsonSerializer();
-                    serializer.Serialize(file, jToken);
+                    _stop = false;
+                    string token = jResponse.token;
+                    string configPath = Environment.CurrentDirectory + "/config.json";
+                    string strToken = "";
+                    if (File.Exists(configPath))
+                    {
+                        strToken = File.ReadAllText(configPath);
+                    }
+                    var jToken = JsonConvert.DeserializeObject<GeneralConfig>(strToken);
+                    if (jToken == null || strToken == "")
+                    {
+                        jToken = new GeneralConfig();
+                    }
+                    jToken.access_token = token;
+                    using (StreamWriter file = File.CreateText("config.json"))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        serializer.Serialize(file, jToken);
+                    }
+                    message = "Đăng nhập thành công";
+                    this.Close();
                 }
-                message = "Đăng nhập thành công";
-                this.Close();
+                else
+                {
+                    _stop = true;
+                    message = jResponse.message;
+                    MessageBox.Show(message, "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else
             {
                 _stop = true;
-                message = jResponse.message;
+                MessageBox.Show("Lỗi kết nối đến server!", "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
         }
 
         private void button1_Click(object sender, EventArgs e)
