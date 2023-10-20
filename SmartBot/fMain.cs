@@ -85,30 +85,36 @@ namespace SmartBot
                 //var authenticator = new JwtAuthenticator(jToken.access_token);
                 var options = new RestClientOptions("http://127.0.0.1:5000");
                 var client = new RestClient(options);
-                var request = new RestRequest("/protected");
+                var request = new RestRequest("/api/user/login_with_license");
+                request.AddHeader("Content-Type", "application/json");
                 //{
                 //    Authenticator = authenticator
                 //};
-                request.AddHeader("Authorization", $"Bearer {jToken.access_token}");
+                request.AddHeader("License", $"{jToken.access_token}");
                 string hwID = HardwareID.Value();
-                request.AddParameter("hwID", hwID);
+                var requestBody = new
+                {
+                    hwID = HardwareID.Value()
+                };
                 //request.AddFile("file", path);
                 //var response = client.Post(request);
+                string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+                request.AddParameter("application/json", jsonRequestBody, ParameterType.RequestBody);
                 var response = client.Post(request);
                 if (response.IsSuccessful)
                 {
                     var content = response.Content; // Raw content as string
                     var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
-                    var status = jResponse.status;
+                    var status = jResponse.error_code;
                     string mess = jResponse.message;
-                    if (status == "success")
+                    if (status == 0)
                     {
                         _stop = false;
                     }
                     else
                     {
                         _stop = true;
-                        if (mess.Contains("expired")){
+                        if (status == 101 || status == 107){
                             /*
                              * Check xem token hết hạn không.
                              * Hết hạn thì xóa token trong file config
@@ -132,8 +138,20 @@ namespace SmartBot
                             {
                                 this.Close();
                             }
+                        } else
+                        {
+                            var resultBox = MessageBox.Show(mess, "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            if (resultBox == DialogResult.OK)
+                            {
+                                fLogin login = new fLogin();
+                                login.ShowDialog();
+                                _stop = login._stop;
+                            }
+                            else
+                            {
+                                this.Close();
+                            }
                         }
-                        //MessageBox.Show(jResponse.message);
                         //Console.WriteLine(jResponse.message);
                     }
                 }

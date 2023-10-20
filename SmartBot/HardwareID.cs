@@ -93,7 +93,7 @@ namespace SmartBot
             foreach (System.Management.ManagementObject mo in moc)
             {
                 //Only get the first one
-                if (result == "")
+                if (result != "")
                 {
                     try
                     {
