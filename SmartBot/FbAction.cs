@@ -102,6 +102,25 @@ namespace SmartBot
         {
             chrome.SetActiveSession(sessionWSEndpoint);
         }
+        private void loadConfig()
+        {
+            /*
+             * Hàm load file json config 
+             * Hàm này thực hiện load cấu hình từ 1 file config json
+             */
+            if (File.Exists(Environment.CurrentDirectory+"/settings.json"))
+            {
+                string json = File.ReadAllText(Environment.CurrentDirectory + "/settings.json");
+                var config = JsonConvert.DeserializeObject<dynamic>(json);
+                this.timeLoad = config["TimeLoad"];
+                this.profileName = config["ProfileName"];
+                this.pathUD = config["PathUD"];
+            }
+            else
+            {
+                MessageBox.Show("Không tìm thấy file config. Vui lòng kiểm tra lại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         public async Task LoginFB(string username, string password)
         {
             /*Hàm đăng nhập fb"*/
@@ -252,7 +271,6 @@ namespace SmartBot
             //Delay(4);
             await Task.Delay(timeLoad);
         }
-
         public async Task PostWall_KichBan(HanhDong BaiDang)
         {
             /* Đăng bài lên tường nhà theo kich ban*/
@@ -326,12 +344,10 @@ namespace SmartBot
                 }
             }
             await Task.Delay(2000);
-
             var ele_int = chrome.Eval("document.getElementsByClassName('x78zum5 x1q0g3np xqui1pq x1pl0jk3 x1plvlek xryxfnj x14ocpvf x5oemz9 x1lck2f0 xlgs127')[0]" +
                 ".getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x78zum5 xdt5ytf x193iq5w xeuugli x1r8uery x1iyjqo2 xs83m0k xsyo7zv x16hj40l x10b6aqq x1yrsyyn')" +
                 ".length-1");
             var ele_json = JsonConvert.DeserializeObject<dynamic>(ele_int)["result"]["result"]["value"];
-
             chrome.Eval("document.getElementsByClassName('x78zum5 x1q0g3np xqui1pq x1pl0jk3 x1plvlek xryxfnj x14ocpvf x5oemz9 x1lck2f0 xlgs127')[0]" +
                 $".getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x78zum5 xdt5ytf x193iq5w xeuugli x1r8uery x1iyjqo2 xs83m0k xsyo7zv x16hj40l x10b6aqq x1yrsyyn')[{ele_json.ToString()}]" +
                 ".getElementsByTagName('div')[0].click()");
@@ -384,7 +400,6 @@ namespace SmartBot
             chrome.MouseClick(svgcmtBox[0], svgcmtBox[1]);
             await Task.Delay(timeLoad);
         }
-
         public async Task CommentAsync(PhanHoi BinhLuan)
         {
             chrome.NavigateTo(BinhLuan.Link);
@@ -1372,7 +1387,44 @@ namespace SmartBot
                 }
             }
         }
-
+        public async Task getInfoGroup(string link)
+        {
+            /*
+             * Lấy thông tin của nhóm
+             */
+            await Task.Delay(1000);
+            chrome.NavigateTo(link);
+            await Task.Delay(timeLoad);
+            await Task.Delay(1000);
+            string nameGroup = chrome.getValueEle("document.getElementsByClassName('x78zum5 xdt5ytf x1wsgfga x9otpla')[0]" +
+                ".getElementsByTagName('a')[0].textContent");
+            chrome.Eval("document.getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x2lah0s x1qjc9v5 x78zum5 x1q0g3np x1a02dak xl56j7k x9otpla x1n0m28w x1wsgfga xp7jhwk')[0]" +
+                ".getElementsByClassName('x1i10hfl xjbqb8w x6umtig x1b1mbwd xaqea5y xav7gou x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr " +
+                "x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz xt0b8zv xzsf02u x1s688f')[0].click()");
+            await Task.Delay(500);
+            string groupsRule = chrome.getValueEle("document.getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x2lah0s x1qjc9v5 x78zum5 x1q0g3np x1a02dak xl56j7k x9otpla x1n0m28w x1wsgfga xp7jhwk')[0]" +
+                ".getElementsByClassName('xod5an3')[0].innerText");
+            string groupsActivaty = chrome.getValueEle("document.getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x2lah0s x1qjc9v5 x78zum5 x1q0g3np x1a02dak xl56j7k x9otpla x1n0m28w x1wsgfga xp7jhwk')[0]" +
+                ".getElementsByClassName('x1wsgfga')[2].innerText");
+            string groupAbout = chrome.getValueEle("document.getElementsByClassName('x9f619 x1n2onr6 x1ja2u2z x2lah0s x1qjc9v5 x78zum5 x1q0g3np x1a02dak xl56j7k x9otpla x1n0m28w x1wsgfga xp7jhwk')[0]" +
+                ".getElementsByClassName('x1wsgfga')[0].innerText");
+            //string category = chrome.getValueEle("document.getElementsByClassName('bp9cbjyn j83agx80 bkfpd7mw')[0]" +
+            //    ".getElementsByClassName('a8c37x1j ni8dbmo4 stjgntxs l9j0dhe7')[1].textContent");
+            //string info = chrome.getValueEle("document.getElementsByClassName('bp9cbjyn j83agx80 bkfpd7mw')[0]" +
+            //    ".getElementsByClassName('a8c37x1j ni8dbmo4 stjgntxs l9j0dhe7')[2].textContent");
+            //string description = chrome.getValueEle("document.getElementsByClassName('bp9cbjyn j83agx80 bkfpd7mw')[0]" +
+            //    ".getElementsByClassName('a8c37x1j ni8dbmo4 stjgntxs l9j0dhe7')[3].textContent");
+            //string member = chrome.getValueEle("document.getElementsByClassName('bp9cbjyn j83agx80 bkfpd7mw')[0]" +
+            //    ".getElementsByClassName('a8c37x1j ni8dbmo4 stjgntxs l9j0dhe7')[4].textContent");
+            //string privacy = chrome.getValueEle("document.getElementsByClassName('bp9cbjyn j83agx80 bkfpd7mw')[0]" +
+            //    ".getElementsByClassName('a8c37x1j ni8dbmo4 stjgntxs l9j0dhe7')[5].textContent");
+            string url = chrome.url();
+            string[] urlSplit = url.Split('/');
+            string idGroup = urlSplit[urlSplit.Length - 1];
+            string[] infoGroup = new string[] { nameGroup, groupAbout, groupsActivaty, groupsRule, idGroup };
+            string infoGroup_string = JsonConvert.SerializeObject(infoGroup);
+            await File.WriteAllTextAsync(Environment.CurrentDirectory + "/Data/Data_Collect/infoGroup.txt", infoGroup_string);
+        }
         public async Task searchGoogle(string Keyword)
         {
             /* 

@@ -38,7 +38,7 @@ namespace SmartBot
 
     public class KichBan
     {
-        public string id { get; set; }
+        public string id { get; set;}
         public List<string> id_hanhdong { get; set; }
         public string mota { get; set; }
         public bool status { get; set; }
@@ -61,5 +61,17 @@ namespace SmartBot
     {
         public string Profile { get; set; }
         public string session { get; set; }
+    }
+    public class GeneralConfig
+    { 
+        public string pathBrowser { get; set; } = Environment.CurrentDirectory + "\\Brave\\barve.exe";
+        public string pathUD { get; set; } = Environment.CurrentDirectory + "\\UserData";
+        public string pathLog { get; set; } = Environment.CurrentDirectory + "\\log.txt";
+        public int delayBeforeAction { get; set; } = 2000;
+        public int delayAfterAction { get; set; } = 2000;
+        public List<string> allowUser { get; set; }
+        public List<string> denyUser { get; set; }
+        public List<dynamic> linkfileGroup { get; set; }
+        public string access_token { get; set; }
     }
 }

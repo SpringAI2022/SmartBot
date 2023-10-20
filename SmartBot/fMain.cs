@@ -41,10 +41,12 @@ namespace SmartBot
         private fCaiDatTuongTac_Reels formReels { get; set; }
         private fCaiDatTuongTac_Stories formStories { get; set; }
         private fCaiDatTuongTac_BinhLuan formBinhLuan { get; set; }
+        private GeneralConfig jConfig { get; set; }
         private string Grfile = null;
         private List<dynamic> link_List;
         private string linkPath = "";
         private string pathUD = Environment.CurrentDirectory + "/UserData";
+        private string pathBrowser = Environment.CurrentDirectory + "/Browser";
         private string[] listFolder = { };
         private string accPath = null;
         private PauseTokenSource pts;
@@ -58,20 +60,20 @@ namespace SmartBot
             InitializeComponent();
             this.timeLoad = Convert.ToInt16(num_Delay.Value) * 1000;
             readToken();
+            loadConfig();
             LoadTinh();
-
         }
         private async void readToken()
         {
-            string configPath = "Config.json";
+            string configPath = Environment.CurrentDirectory +"/config.json";
             string strToken = "";
             if (File.Exists(configPath))
             {
                 strToken = File.ReadAllText(configPath);
             }
-            var jToken = JsonConvert.DeserializeObject<dynamic>(strToken);
+            var jToken = JsonConvert.DeserializeObject<GeneralConfig>(strToken);
 
-            if (jToken == null || strToken == "")
+            if (jToken == null || strToken == "" || jToken.access_token == "")
             {
                 Console.WriteLine("Không có token, chạy hàm login");
                 fLogin login = new fLogin();
@@ -93,20 +95,73 @@ namespace SmartBot
                 //request.AddFile("file", path);
                 //var response = client.Post(request);
                 var response = client.Post(request);
-                var content = response.Content; // Raw content as string
-                var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
-                var status = jResponse.status;
-                if (status == "success")
+                if (response.IsSuccessful)
                 {
-                    _stop = false;
+                    var content = response.Content; // Raw content as string
+                    var jResponse = JsonConvert.DeserializeObject<dynamic>(content);
+                    var status = jResponse.status;
+                    string mess = jResponse.message;
+                    if (status == "success")
+                    {
+                        _stop = false;
+                    }
+                    else
+                    {
+                        _stop = true;
+                        if (mess.Contains("expired")){
+                            /*
+                             * Check xem token hết hạn không.
+                             * Hết hạn thì xóa token trong file config
+                             * Mở form login lên để người dùng đăng nhập lại
+                             * Và tạo token mới
+                             */
+                            jToken.access_token = "";
+                            using (StreamWriter file = File.CreateText("config.json"))
+                            {
+                                JsonSerializer serializer = new JsonSerializer();
+                                serializer.Serialize(file, jToken);
+                            }
+                            var resultBox = MessageBox.Show("Phiên đăng nhập đã hết hạn, hãy đăng nhập lại!", "Thông tin", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                            if(resultBox == DialogResult.OK)
+                            {
+                                fLogin login = new fLogin();
+                                login.ShowDialog();
+                                _stop = login._stop;
+                            }
+                            else
+                            {
+                                this.Close();
+                            }
+                        }
+                        //MessageBox.Show(jResponse.message);
+                        //Console.WriteLine(jResponse.message);
+                    }
                 }
                 else
                 {
                     _stop = true;
-                    MessageBox.Show(jResponse.message);
-                    Console.WriteLine(jResponse.message);
+                    MessageBox.Show("Lỗi kết nối đến server!", "Lỗi!", MessageBoxButtons.OK, MessageBoxIcon.Error );
                 }
             }
+        }
+        private void loadConfig()
+        {
+            /*
+             * tạo ra 1 hàm thực hiện tải vào cấu hình của ứng dụng từ file json
+             * các cấu hình từ file bao gồm các biến trong chương trình
+             */
+            try
+            {
+                var configPath = "config.json";
+                var strConfig = File.ReadAllText(configPath);
+                jConfig = JsonConvert.DeserializeObject<GeneralConfig>(strConfig);
+                if(jConfig.pathUD == null || jConfig.pathUD == "") { jConfig.pathUD = Environment.CurrentDirectory + "/UserData"; }
+                if(jConfig.pathLog == null || jConfig.pathLog == "") { jConfig.pathLog = Environment.CurrentDirectory + "/log.txt"; }
+                if(jConfig.delayBeforeAction == null || jConfig.delayBeforeAction == 0) { jConfig.delayBeforeAction = 2000; }
+                if(jConfig.delayAfterAction == null || jConfig.delayAfterAction == 0) { jConfig.delayAfterAction = 2000; }
+            }
+            catch { }
+
         }
         private void LoadTinh()
         {
@@ -165,11 +220,10 @@ namespace SmartBot
                 dataGridView.Rows[pro5].Cells[4].Value = txt_Proxy.Text;
                 dataGridView.Rows[pro5].Cells[5].Value = "Đang khởi tạo!!!";
             });
-            await Task.Delay(2000);
-            await Task.Delay(2000);
+            await Task.Delay(jConfig.delayBeforeAction);
             if (cb_LoginFanPage.Checked)
             {
-                await Task.Delay(1000);
+                await Task.Delay(jConfig.delayBeforeAction);
                 await FB.SwitchPage();
                 dataGridView.Invoke((MethodInvoker)delegate
                 {
@@ -177,6 +231,7 @@ namespace SmartBot
                 });
                 await Task.Delay(this.timeLoad);
             }
+            await Task.Delay(jConfig.delayAfterAction);
             int contNewFeeds = formNewfeeds == null ? 0 : formNewfeeds.listBaiDang_Select.Count;
             int countGroups = formNhom == null ? 0 : formNhom.listBaiDang_Select.Count;
             int countBinhluan = formBinhLuan == null ? 0 : formBinhLuan.listPhanHoi_Load.Count;
@@ -203,7 +258,7 @@ namespace SmartBot
                     {
                         dataGridView.Rows[pro5].Cells[5].Value = $"Đã đăng {i + 1} bài lên tường thành công!!";
                     });
-                    await Task.Delay(2000);
+                    await Task.Delay(jConfig.delayAfterAction);
 
                 }
                 if (clb_Actions.GetItemChecked(1) && countGroups > 0 && i < countGroups)
@@ -219,7 +274,7 @@ namespace SmartBot
                     {
                         dataGridView.Rows[pro5].Cells[5].Value = $"Đã đăng {i + 1} bài lên Nhóm thành công!!";
                     });
-                    await Task.Delay(2000);
+                    await Task.Delay(jConfig.delayAfterAction);
                 }
                 if (clb_Actions.GetItemChecked(2) && countBinhluan > 0 && i < countBinhluan)
                 {
@@ -234,7 +289,7 @@ namespace SmartBot
                     {
                         dataGridView.Rows[pro5].Cells[5].Value = $"Đã bình luận {i + 1} bình luận thành công!!";
                     });
-                    await Task.Delay(2000);
+                    await Task.Delay(jConfig.delayAfterAction);
 
                 }
                 if (clb_Actions.GetItemChecked(3) || clb_Actions.GetItemChecked(4))
@@ -243,12 +298,10 @@ namespace SmartBot
                     {
                         dataGridView.Rows[pro5].Cells[5].Value = "Đang thả cảm xúc và chia sẻ bài viết!!!";
                     });
-                    await Task.Delay(2000);
+                    await Task.Delay(jConfig.delayBeforeAction);
                     string noidungChiase = ""; // Lấy nội dung chia sẻ từ formChiase
                     await FB.LikeAndShare(clb_Actions.GetItemChecked(4), clb_Actions.GetItemChecked(3), noidungChiase, "");
                     saveLog("Bình luận", formBinhLuan.listPhanHoi_Select[i].UserID, DateTime.Now.ToString(), formBinhLuan.listPhanHoi_Select[i].Link);
-
-
                 }
                 dataGridView.Invoke((MethodInvoker)delegate
                 {
@@ -262,7 +315,7 @@ namespace SmartBot
                 {
                     dataGridView.Rows[pro5].Cells[5].Value = "Đang tìm kiếm nhóm và tham gia nhóm";
                 });
-                await Task.Delay(2000);
+                await Task.Delay(jConfig.delayAfterAction);
                 string keySearch = txt_KeySearchGroup.Text;
                 int soluongGroupThamGia = 20;
                 await FB.JoinGroupAsync(keySearch, soluongGroupThamGia);
@@ -272,7 +325,7 @@ namespace SmartBot
                     dataGridView.Rows[pro5].Cells[5].Value = $"Đã tham gia {soluongGroupThamGia} Nhóm từ key word: {keySearch}!!";
                 });
                 //await JoinGroupAsync(chrome);
-                await Task.Delay(2000);
+                await Task.Delay(jConfig.delayAfterAction);
             }
             //if ((cb_PostID.Checked) && (txt_CmtID.Text != ""))
             //{
@@ -290,8 +343,9 @@ namespace SmartBot
         private async Task RunAsync(CancellationToken ct)
         {
             List<Task> TaskList = new List<Task>();
-            listFolder = Directory.GetDirectories(pathUD, "Profile *");
-            int Delay_ = Convert.ToInt16(num_Delay.Value);
+            if(jConfig.pathUD == null || jConfig.pathUD == "") { jConfig.pathUD = Environment.CurrentDirectory + "/UserData"; }
+            listFolder = Directory.GetDirectories(jConfig.pathUD, "Profile *");
+            int Delay_ = Convert.ToInt16(timeLoad);
             this.BeginInvoke(new Action(() =>
             {
                 bool flag = true;
@@ -344,7 +398,7 @@ namespace SmartBot
                 Thoi_Gian = thoiGian,
                 Den = hanhDongVoi
             };
-            using (StreamWriter file = File.AppendText("log.txt"))
+            using (StreamWriter file = File.AppendText(jConfig.pathLog))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(file, obj);
@@ -707,7 +761,7 @@ namespace SmartBot
             }
             chrome.SetActiveSession(sessionWSEndpoint);
 
-            Thread.Sleep(200);
+            await Task.Delay(2000);
 
             List<string> listID = new List<string>();
             string readInfoPost = File.ReadAllText("Data/postList.json");
@@ -736,13 +790,13 @@ namespace SmartBot
                 };
                 listInfo.Add(myInfo);
             }
-            await Task.Delay(500);
+            await Task.Delay(jConfig.delayAfterAction);
             using (StreamWriter file = File.CreateText("Data/postList.json"))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(file, listInfo);
             }
-            await Task.Delay(1000);
+            await Task.Delay(jConfig.delayBeforeAction);
             MessageBox.Show("Đã ghi dữ liệu vào tệp tin Data/postList.json", "Sucess!", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         private async Task<bool> MultiSearch(string Profile, string keySearch, string location, int ngroup, int pro5)
@@ -760,10 +814,10 @@ namespace SmartBot
                 dataGridView.Rows[pro5].Cells[4].Value = txt_Proxy.Text;
                 dataGridView.Rows[pro5].Cells[5].Value = "Đang khởi tạo!!!";
             });
-            await Task.Delay(2000);
+            await Task.Delay(jConfig.delayBeforeAction);
             if (cb_LoginFanPage.Checked)
             {
-                await Task.Delay(1000);
+                await Task.Delay(jConfig.delayBeforeAction);
                 await fb.SwitchPage();
                 dataGridView.Invoke((MethodInvoker)delegate
                 {
@@ -777,9 +831,9 @@ namespace SmartBot
                 {
                     dataGridView.Rows[pro5].Cells[5].Value = $"Đang tìm kiếm TRANG với từ khóa {keySearch} tại {location}";
                 });
-                await Task.Delay(1000);
+                await Task.Delay(jConfig.delayBeforeAction);
                 await fb.searchScrollSmooth(Profile.Split()[1], "pages", keySearch, location, ngroup);
-                await Task.Delay(1000);
+                await Task.Delay(jConfig.delayAfterAction);
             }
             if (clb_OptionSearch.GetItemChecked(1))
             {
@@ -787,9 +841,9 @@ namespace SmartBot
                 {
                     dataGridView.Rows[pro5].Cells[5].Value = $"Đang tìm kiếm NHÓM với từ khóa {keySearch} tại {location}";
                 });
-                await Task.Delay(1000);
+                await Task.Delay(jConfig.delayBeforeAction);
                 await fb.searchScrollSmooth(Profile.Split()[1], "groups", keySearch, location, ngroup);
-                await Task.Delay(1000);
+                await Task.Delay(jConfig.delayAfterAction);
             }
             dataGridView.Invoke((MethodInvoker)delegate
             {
@@ -802,7 +856,7 @@ namespace SmartBot
             {
                 dataGridView.Rows[pro5].Cells[5].Value = $"Done tại {location}";
             });
-            await Task.Delay(2000);
+            await Task.Delay(jConfig.delayAfterAction);
             return true;
         }
         private async Task searchKey(CancellationToken ct)
@@ -810,7 +864,7 @@ namespace SmartBot
             var donviHanhChinh = await File.ReadAllTextAsync("Data/DonViHanhChinh.json");
             dynamic donvi = JsonConvert.DeserializeObject<dynamic>(donviHanhChinh);
             List<Task> TaskList = new List<Task>();
-            listFolder = Directory.GetDirectories(pathUD, "Profile *");
+            listFolder = Directory.GetDirectories(jConfig.pathUD, "Profile *");
             int Delay_ = Convert.ToInt16(num_Delay.Value);
             int numTask = Convert.ToInt16(numThreads.Value);
             int lenProfile = listFolder.Length;
@@ -855,12 +909,12 @@ namespace SmartBot
                             string location = QuanHuyen[idxQH];
                             string[] Profile_ = listFolder[idxProfile].Split('\\');
                             int idxFolderProfile = Profile_.Length - 1;
-                            await Task.Delay(1000);
+                            await Task.Delay(jConfig.delayBeforeAction);
                             //Task task = new Task(() => { MultiSearch(Profile_[idxFolderProfile], keySearch, location, ngroup, pro5 + pro6); });
                             Task task = Task.Run(() => MultiSearch(Profile_[idxFolderProfile], keySearch, location, ngroup, pro5 + (minTask * cout)));
                             //task.Start();
                             counter++;
-                            await Task.Delay(2000);
+                            await Task.Delay(jConfig.delayAfterAction);
                             TaskList.Add(task);
                         }
                         await Task.WhenAll(TaskList.ToArray());
@@ -878,7 +932,7 @@ namespace SmartBot
             var donviHanhChinh = await File.ReadAllTextAsync("Data/DonViHanhChinh.json");
             dynamic donvi = JsonConvert.DeserializeObject<dynamic>(donviHanhChinh);
             List<Task> TaskList = new List<Task>();
-            listFolder = Directory.GetDirectories(pathUD, "Profile *");
+            listFolder = Directory.GetDirectories(jConfig.pathUD, "Profile *");
             int lenProfile = listFolder.Length;
             this.BeginInvoke(new Action(async () =>
             {
@@ -956,8 +1010,32 @@ namespace SmartBot
                         //listHanhDongOfKichBan.Add(hanhdong);
                         if (hanhdong.status)
                         {
-                            await ChayHanhDong(hanhdong);
-                            hanhdong.status = false;
+                            if(jConfig.allowUser != null)
+                            {
+                                if(jConfig.allowUser.Contains(hanhdong.user_profile))
+                                {
+                                    await ChayHanhDong(hanhdong);
+                                    hanhdong.status = false;
+
+                                }
+                            }
+                            else if(jConfig.denyUser != null)
+                            {
+                                if(!jConfig.denyUser.Contains(hanhdong.user_profile))
+                                {
+                                    await ChayHanhDong(hanhdong);
+                                    hanhdong.status = false;
+
+                                }
+                            }
+                            else if((jConfig.allowUser == null) && (jConfig.denyUser == null))
+                            {
+                                await ChayHanhDong(hanhdong);
+                                hanhdong.status = false;
+
+                            }
+                            //await ChayHanhDong(hanhdong);
+                            //hanhdong.status = false;
                         }
                     }
                 }
@@ -1059,7 +1137,7 @@ namespace SmartBot
                 {
                     dataGridView.Rows[idxStatus].Cells[5].Value = $"{hanhdong.user_profile} Đã đăng bài lên tường thành công!!";
                 });
-                await Task.Delay(2000);
+                await Task.Delay(jConfig.delayAfterAction);
             }
             else if (hanhdong.type == 1)
             {
@@ -1073,7 +1151,7 @@ namespace SmartBot
                 {
                     dataGridView.Rows[idxStatus].Cells[5].Value = $"{hanhdong.user_profile} Đã đăng bài lên Nhóm thành công!!";
                 });
-                await Task.Delay(2000);
+                await Task.Delay(jConfig.delayAfterAction);
             }
             else if (hanhdong.type == 2)
             {
@@ -1087,7 +1165,7 @@ namespace SmartBot
                 {
                     dataGridView.Rows[idxStatus].Cells[5].Value = $"{hanhdong.user_profile} Đã đăng Bình luận thành công!!";
                 });
-                await Task.Delay(2000);
+                await Task.Delay(jConfig.delayAfterAction);
             }
         }
         #endregion
@@ -1119,7 +1197,7 @@ namespace SmartBot
             await Task.Run(() => searchKey(tokenSource));
         }
 
-        private async void KichBan_Click(object sender, EventArgs e)
+        private async void btnKichBan_Click(object sender, EventArgs e)
         {
             dataGridView.Invoke((MethodInvoker)delegate
             {
@@ -1136,6 +1214,7 @@ namespace SmartBot
             if (this._stop == true)
             {
                 this.Close();
+
             }
         }
     }

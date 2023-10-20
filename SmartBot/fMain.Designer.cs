@@ -114,7 +114,7 @@ namespace SmartBot
             txt_Pass = new System.Windows.Forms.TextBox();
             label16 = new System.Windows.Forms.Label();
             tabControl1 = new System.Windows.Forms.TabControl();
-            btnKichBan = new System.Windows.Forms.Button();
+            btn_KichBan = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             tab_Tools.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numSoLuong).BeginInit();
@@ -442,7 +442,7 @@ namespace SmartBot
             // tab_Actions
             // 
             tab_Actions.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            tab_Actions.Controls.Add(btnKichBan);
+            tab_Actions.Controls.Add(btn_KichBan);
             tab_Actions.Controls.Add(label1);
             tab_Actions.Controls.Add(txt_JoinNGr);
             tab_Actions.Controls.Add(txt_KeySearchGroup);
@@ -901,15 +901,15 @@ namespace SmartBot
             tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             tabControl1.TabIndex = 28;
             // 
-            // btnKichBan
+            // btn_KichBan
             // 
-            btnKichBan.Location = new System.Drawing.Point(590, 416);
-            btnKichBan.Name = "btnKichBan";
-            btnKichBan.Size = new System.Drawing.Size(122, 28);
-            btnKichBan.TabIndex = 60;
-            btnKichBan.Text = "Chạy Kịch Bản";
-            btnKichBan.UseVisualStyleBackColor = true;
-            btnKichBan.Click += btnKichBan_Click;
+            btn_KichBan.Location = new System.Drawing.Point(606, 426);
+            btn_KichBan.Name = "btn_KichBan";
+            btn_KichBan.Size = new System.Drawing.Size(118, 23);
+            btn_KichBan.TabIndex = 60;
+            btn_KichBan.Text = "Chạy Kịch Bản";
+            btn_KichBan.UseVisualStyleBackColor = true;
+            btn_KichBan.Click += btnKichBan_Click;
             // 
             // fMain
             // 
@@ -923,6 +923,7 @@ namespace SmartBot
             Name = "fMain";
             StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             Text = "Smart Bot";
+            Load += fMain_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView).EndInit();
             tab_Tools.ResumeLayout(false);
             tab_Tools.PerformLayout();
@@ -1022,7 +1023,7 @@ namespace SmartBot
         private System.Windows.Forms.DataGridViewTextBoxColumn cProxy;
         private System.Windows.Forms.DataGridViewTextBoxColumn cStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn gridView_Delay;
-        private System.Windows.Forms.Button btnKichBan;
+        private System.Windows.Forms.Button btn_KichBan;
     }
 }
 
